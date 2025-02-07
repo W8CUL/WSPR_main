@@ -1,5 +1,12 @@
 
 #include <SoftwareSerial.h>
+#include <si5351.h>
+#include <JTEncode.h>
+#include <rs_common.h>
+#include <int.h>
+#include <string.h>
+
+#include "Wire.h"
 
 SoftwareSerial gps(3, 2);  // RX, TX
 
@@ -20,7 +27,7 @@ void loop() {
     Serial.println(gps_raw);
     //sim packet  $GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E
     if (gps_raw.substring(0, 6) == "$GPGLL") {
-      if (digitalRead(sim_packet) == 0) {
+      if (sim == 1) {
         gps_raw = "$GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E";
         //v4.2 test data
       } else {
@@ -29,3 +36,4 @@ void loop() {
       }
     }
   }
+}
