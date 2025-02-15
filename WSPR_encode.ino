@@ -110,10 +110,8 @@ void encode() {
   // Now transmit the channel symbols
   if (cur_mode == MODE_FSQ_2 || cur_mode == MODE_FSQ_3 || cur_mode == MODE_FSQ_4_5 || cur_mode == MODE_FSQ_6) {
     uint8_t j = 0;
-
     while (tx_buffer[j++] != 0xff)
       ;
-
     symbol_count = j - 1;
   }
 
@@ -129,9 +127,8 @@ void encode() {
 void set_tx_buffer() {
   // Clear out the transmit buffer
   memset(tx_buffer, 0, 255);
-  //jtencode.wspr_encode(call, loc, dbm, tx_buffer);
-
-  jtencode.ft8_encode(message, tx_buffer);
+  jtencode.wspr_encode(call, loc, dbm, tx_buffer);
+  //jtencode.ft8_encode(message, tx_buffer);
 }
 
 
