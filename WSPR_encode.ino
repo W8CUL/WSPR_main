@@ -118,10 +118,8 @@ void encode() {
   // Now transmit the channel symbols
   if (cur_mode == MODE_FSQ_2 || cur_mode == MODE_FSQ_3 || cur_mode == MODE_FSQ_4_5 || cur_mode == MODE_FSQ_6) {
     uint8_t j = 0;
-
     while (tx_buffer[j++] != 0xff)
       ;
-
     symbol_count = j - 1;
   }
 
