@@ -17,11 +17,11 @@ char Lon[] = "xxxxx.xxxxxxxx";
 char time_str[12];
 char tmp_str[15];
 int msg_valid = 0;
-float lon,lat,utc;
+float lon, lat, utc;
 
 
-#define FT8 1
-
+//#define FT8 1
+#define WSPR 1
 
 
 void setup() {
@@ -31,32 +31,33 @@ void setup() {
 
   gps.begin(9600);
   setup_WSPR();
+  utc = 3489.00;  //random value till GPS lock, 0 would send a packet
 }
 
 #define sim 0
-//#define debug_low 1 - //unconnent only when needdee
+#define debug_low 1 - //unconnent only when needdee
 
 
 void loop() {
   // put your main code here, to run repeatedly:
   while (gps.available() > 0) {
     String gps_raw = gps.readStringUntil('\n');
-    #ifdef debug_low
-      Serial.println(gps_raw);
-    #endif
+#ifdef debug_low
+    Serial.println(gps_raw);
+#endif
     //sim packet  $GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E
     if (gps_raw.substring(0, 6) == "$GPGLL") {
 
-      #ifdef debug_low
-        if (sim == 1) {
-          gps_raw = "$GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E";
-          //v4.2 test data
-          //Serial.println(gps_raw);
-        } else {
-          //print raw GPS data
-          //Serial.println(gps_raw);
-        }
-      #endif
+#ifdef debug_low
+      if (sim == 1) {
+        gps_raw = "$GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E";
+        //v4.2 test data
+        //Serial.println(gps_raw);
+      } else {
+        //print raw GPS data
+        //Serial.println(gps_raw);
+      }
+#endif
       gps_raw.toCharArray(test_data, 100);
       char *p = strtok(test_data, ",");
       update_GPS(p);
@@ -82,20 +83,20 @@ void update_GPS(char *p) {
   //char *p = strtok(test_data, ",");  //code - <0>
 
 
-  p = strtok(NULL, ",");             //lat - <1>
+  p = strtok(NULL, ",");  //lat - <1>
   //sprintf(Lat, "%s", p);
-  lat = atof(p)/100.00;
+  lat = atof(p) / 100.00;
 
-  
+
   // bug fix in v2
   if (Lat[4] == '.') {
     Lat[7] = '\0';
   } else {
     Lat[8] = '\0';
   }
-  
 
-  
+
+
   p = strtok(NULL, ",");  // lat_char - <2>
   //sprintf(Lat, "%s%s\0", Lat, p);
 
@@ -124,7 +125,7 @@ void update_GPS(char *p) {
 
   msg_valid = 1;
 
- 
+
   //Serial.println(utc);
   //Serial.print(long(utc));
 
@@ -145,19 +146,19 @@ void update_GPS(char *p) {
   }
   */
 
-  
-  int sec = long(utc)%100;
-  int min = long(utc)%10000 - sec;
+
+  int sec = long(utc) % 100;
+  int min = long(utc) % 10000 - sec;
 
   Serial.print(min);
   Serial.print(",");
   Serial.println(sec);
 
-  #ifdef FT8
-  if(sec==30){
+#ifdef FT8
+  if (sec == 30) {
 
- 
-  
+
+
     Serial.print(lat);
     Serial.print(",");
     Serial.println(lon);
@@ -165,22 +166,29 @@ void update_GPS(char *p) {
     Serial.println("FT8 - 20m");
     gps.stopListening();
     encode();
-    delay(50); //delay to avoid extra triggers
+    delay(50);  //delay to avoid extra triggers
     gps.listen();
     Serial.println("End FT8");
-  }else{
+  } else {
     Serial.println(long(utc));
-
   }
-  
-  #endif
 
-  #ifdef WSPR
+#endif
+
+  //test - fast encode without time sync
+  //encode();
+
+#ifdef WSPR
   // WSPR
 
+  if (sec == 0 & (min % 200)==0) {
+    Serial.println("WSPR-20 m");
+    gps.stopListening();
+    encode();
+    delay(50);  //delay to avoid extra triggers
+    gps.listen();
+    Serial.println("End WSPR");
+  }
 
-  #endif
-
-
-
+#endif
 }

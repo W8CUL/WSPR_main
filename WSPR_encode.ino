@@ -63,7 +63,15 @@
 #define JT9_DEFAULT_FREQ 14078700UL
 #define JT65_DEFAULT_FREQ 14078300UL
 #define JT4_DEFAULT_FREQ 14078500UL
-#define WSPR_DEFAULT_FREQ 14097200UL
+//#define WSPR_DEFAULT_FREQ 14097200UL
+#define WSPR_DEFAULT_FREQ 14095000UL
+
+// freq -> WSPR detected
+//6X1 -> ~2080
+//590 -> 2040
+//000 -> Within the band of 1500 hz
+
+
 #define FSQ_DEFAULT_FREQ 7105350UL  // Base freq is 1350 Hz higher than dial freq in USB
 #define FT8_DEFAULT_FREQ 14075000UL
 
@@ -131,7 +139,13 @@ void set_tx_buffer() {
   memset(tx_buffer, 0, 255);
   //jtencode.wspr_encode(call, loc, dbm, tx_buffer);
 
+#ifdef FT8
   jtencode.ft8_encode(message, tx_buffer);
+#endif
+
+#ifdef WSPR
+  jtencode.wspr_encode(call, loc, dbm, tx_buffer);
+#endif
 }
 
 
@@ -149,15 +163,26 @@ void setup_WSPR() {
   pinMode(BUTTON, INPUT_PULLUP);
   // Set the mode to use
   //cur_mode = MODE_JT65;
-  cur_mode = MODE_FT8;
-  //cur_mode = MODE_WSPR;
 
-  // Set the proper frequency, tone spacing, symbol count, and
-  // tone delay depending on mode
+#ifdef FT8
+  cur_mode = MODE_FT8;
   freq = FT8_DEFAULT_FREQ;
   symbol_count = FT8_SYMBOL_COUNT;  // From the library defines
   tone_spacing = FT8_TONE_SPACING;
   tone_delay = FT8_DELAY;
+#endif
+
+#ifdef WSPR
+  cur_mode = MODE_WSPR;
+  freq = WSPR_DEFAULT_FREQ;
+  symbol_count = WSPR_SYMBOL_COUNT;  // From the library defines
+  tone_spacing = WSPR_TONE_SPACING;
+  tone_delay = WSPR_DELAY;
+#endif
+
+  // Set the proper frequency, tone spacing, symbol count, and
+  // tone delay depending on mode
+
   // Set CLK0 output
   si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);  // Set for max power if desired
   si5351.output_enable(SI5351_CLK0, 0);                  // Disable the clock initially
