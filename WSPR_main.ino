@@ -22,20 +22,21 @@ float lon, lat, utc;
 
 //#define FT8 1
 #define WSPR 1
+#define sim 0
+//#define debug_low 1 - //unconnent only when needed
+
 
 
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600);
-  Serial.println(F("Testing"));
+  Serial.println(F("KE8TJE WSPR testing - 20 m"));
 
   gps.begin(9600);
   setup_WSPR();
   utc = 3489.00;  //random value till GPS lock, 0 would send a packet
 }
 
-#define sim 0
-#define debug_low 1 - //unconnent only when needdee
 
 
 void loop() {
@@ -47,7 +48,8 @@ void loop() {
 #endif
     //sim packet  $GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E
     if (gps_raw.substring(0, 6) == "$GPGLL") {
-
+      //print GPS data with or without lock
+      Serial.println(gps_raw);
 #ifdef debug_low
       if (sim == 1) {
         gps_raw = "$GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E";
@@ -156,9 +158,6 @@ void update_GPS(char *p) {
 
 #ifdef FT8
   if (sec == 30) {
-
-
-
     Serial.print(lat);
     Serial.print(",");
     Serial.println(lon);
@@ -180,11 +179,16 @@ void update_GPS(char *p) {
 
 #ifdef WSPR
   // WSPR
-
   if (sec == 0 & (min % 200)==0) {
     Serial.println("WSPR-20 m");
     gps.stopListening();
+
+    // Function needs to be added to send 8 digit location
+  
+    // Send WSPR
     encode();
+
+
     delay(50);  //delay to avoid extra triggers
     gps.listen();
     Serial.println("End WSPR");

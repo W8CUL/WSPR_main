@@ -43,26 +43,13 @@
 #include "Wire.h"
 
 // Mode defines
-#define JT9_TONE_SPACING 174   // ~1.74 Hz
-#define JT65_TONE_SPACING 269  // ~2.69 Hz
-#define JT4_TONE_SPACING 437   // ~4.37 Hz
 #define WSPR_TONE_SPACING 146  // ~1.46 Hz
-#define FSQ_TONE_SPACING 879   // ~8.79 Hz
 #define FT8_TONE_SPACING 625   // ~6.25 Hz
 
-#define JT9_DELAY 576      // Delay value for JT9-1
-#define JT65_DELAY 371     // Delay in ms for JT65A
-#define JT4_DELAY 229      // Delay value for JT4A
 #define WSPR_DELAY 683     // Delay value for WSPR
-#define FSQ_2_DELAY 500    // Delay value for 2 baud FSQ
-#define FSQ_3_DELAY 333    // Delay value for 3 baud FSQ
-#define FSQ_4_5_DELAY 222  // Delay value for 4.5 baud FSQ
-#define FSQ_6_DELAY 167    // Delay value for 6 baud FSQ
 #define FT8_DELAY 159      // Delay value for FT8
 
-#define JT9_DEFAULT_FREQ 14078700UL
-#define JT65_DEFAULT_FREQ 14078300UL
-#define JT4_DEFAULT_FREQ 14078500UL
+
 //#define WSPR_DEFAULT_FREQ 14097200UL
 #define WSPR_DEFAULT_FREQ 14095000UL
 
@@ -71,10 +58,7 @@
 //590 -> 2040
 //000 -> Within the band of 1500 hz
 
-
-#define FSQ_DEFAULT_FREQ 7105350UL  // Base freq is 1350 Hz higher than dial freq in USB
 #define FT8_DEFAULT_FREQ 14075000UL
-
 #define DEFAULT_MODE MODE_WSPR
 
 // Hardware defines
@@ -82,14 +66,8 @@
 #define LED_PIN 13
 
 // Enumerations
-enum mode { MODE_JT9,
-            MODE_JT65,
-            MODE_JT4,
+enum mode { 
             MODE_WSPR,
-            MODE_FSQ_2,
-            MODE_FSQ_3,
-            MODE_FSQ_4_5,
-            MODE_FSQ_6,
             MODE_FT8 };
 
 // Class instantiation
@@ -102,6 +80,10 @@ char message[] = "KE8TJE FM09";
 char call[] = "KE8TJE";
 char loc[] = "FM09";
 uint8_t dbm = 27;
+
+// 27 - 500 mW
+// 23 - 200 mW
+
 uint8_t tx_buffer[255];
 enum mode cur_mode = DEFAULT_MODE;
 uint8_t symbol_count;
@@ -114,15 +96,7 @@ void encode() {
   // Reset the tone to the base frequency and turn on the output
   si5351.output_enable(SI5351_CLK0, 1);
   digitalWrite(LED_PIN, HIGH);
-
-  // Now transmit the channel symbols
-  if (cur_mode == MODE_FSQ_2 || cur_mode == MODE_FSQ_3 || cur_mode == MODE_FSQ_4_5 || cur_mode == MODE_FSQ_6) {
-    uint8_t j = 0;
-    while (tx_buffer[j++] != 0xff)
-      ;
-    symbol_count = j - 1;
-  }
-
+  
   for (i = 0; i < symbol_count; i++) {
     si5351.set_freq((freq * 100) + (tx_buffer[i] * tone_spacing), SI5351_CLK0);
     delay(tone_delay);
