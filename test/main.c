@@ -1,11 +1,13 @@
+#include <stdio.h>
+#include <string.h>
 
-// generate grid square based on GPS: lon,lat
 
+char grid[10];
 
 void togrid(float lat, float lon) {
     // Adjust longitude to 0-360 and latitude to 0-180
     lon += 180.0;
-	  lat += 90.0;
+	lat += 90.0;
     //char grid[10];
     // First pair: letters (A-R)
     grid[0]  = 'A' + (int)(lon / 20);
@@ -27,4 +29,21 @@ void togrid(float lat, float lon) {
 
     // Construct the Maidenhead grid square
     //return grid;
+}
+
+
+//#include "../GPS_grid.ino"
+
+int main(){
+	
+	printf("grid test\n");
+
+	float lon = -79.7866;			
+	float lat = 32.7871;		//39.6456,-79.9704;
+	togrid(lat,lon);
+
+	printf("%f,%f\n",lat,lon);
+	printf("%s\n",grid);
+
+	return 0;
 }

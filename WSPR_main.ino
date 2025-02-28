@@ -12,12 +12,17 @@ SoftwareSerial gps(3, 2);  // RX, TX
 char test_data[100];
 
 
-char Lat[] = "xxxx.xxxxxx";
-char Lon[] = "xxxxx.xxxxxxxx";
+//char Lat[] = "xxxx.xxxxxx";
+//char Lon[] = "xxxxx.xxxxxxxx";
 char time_str[12];
 char tmp_str[15];
 int msg_valid = 0;
+int loc_valid = 0;
+int ts = 0;
 float lon, lat, utc;
+
+char call[] = "KE8TJE";
+char loc[] = "xxxx";
 
 
 //#define FT8 1
@@ -25,6 +30,7 @@ float lon, lat, utc;
 #define sim 0
 //#define debug_low 1 - //unconnent only when needed
 
+char grid[10];  //global variable
 
 
 void setup() {
@@ -89,64 +95,51 @@ void update_GPS(char *p) {
   //sprintf(Lat, "%s", p);
   lat = atof(p) / 100.00;
 
-
+  //Should be able to remove these after testing
   // bug fix in v2
-  if (Lat[4] == '.') {
+  /*if (Lat[4] == '.') {
     Lat[7] = '\0';
   } else {
     Lat[8] = '\0';
   }
+  */
 
 
 
-  p = strtok(NULL, ",");  // lat_char - <2>
-  //sprintf(Lat, "%s%s\0", Lat, p);
-
-  //p = strtok(NULL, ",");             //lng
-  //p = strtok(NULL, ",");             //dir
+  p = strtok(NULL, ",");  // lat_dir - <2>
+  // handel south
 
   p = strtok(NULL, ",");  //lng - <3>
   lon = atof(p);
-  //sprintf(Lon, "%s", p);
 
+
+  //Should be able to remove these after testing
+  /*
   if (Lon[4] == '.') {
     Lon[7] = '\0';
   } else {
     Lon[8] = '\0';
   }
+  */
 
   p = strtok(NULL, ",");  //dir - <4>
-  sprintf(Lon, "%s%s\0", Lon, p);
+  if (p[0] == 'W') {
+    // change lon to negative;
+    lon = -lon;
+  }
 
-  p = strtok(NULL, ",");  //state - <5>
+  p = strtok(NULL, ",");  //time - <5>
   utc = atof(p);
 
-  //Serial.print("-");
-  //Serial.println(p);
+  p = strtok(NULL, ",");  //status- <6>
 
-
-  msg_valid = 1;
-
-
-  //Serial.println(utc);
-  //Serial.print(long(utc));
-
-  /*
-  if(long(utc)%200==0){
-
-    Serial.print(lat);
-    Serial.print(",");
-    Serial.println(lon);
-    Serial.println(utc);
-
-    Serial.println("WSPR - 20m");
-    encode();
-    delay(50); //delay to avoid extra triggers
-    Serial.println("End of WSPR");
-  }else{
-    Serial.println(long(utc));
+  // need GPS testing - TJE
+  if (p[0] == 'A') {
+    msg_valid = 1;
+    togrid(lat, lon);
+  } else {
+    msg_valid = 0;
   }
-  */
 
 
   int sec = long(utc) % 100;
@@ -179,15 +172,25 @@ void update_GPS(char *p) {
 
 #ifdef WSPR
   // WSPR
-  if (sec == 0 & (min % 200)==0) {
-    Serial.println("WSPR-20 m");
+  if (sec == 0 & (min % 200) == 0 & loc_valid) {
+
     gps.stopListening();
 
-    // Function needs to be added to send 8 digit location
-  
+    //Function to handel ts and locations
+    for (int i = 0; i++; i < 4) {
+      loc[i] = grid[i + ts * 4];
+    }
+    if (ts == 0) {
+      ts = 1;
+    } else {
+      ts = 0;
+    }
+    Serial.print("WSPR-20m :");
+    Serial.print(loc);
+    Serial.println();
+
     // Send WSPR
     encode();
-
 
     delay(50);  //delay to avoid extra triggers
     gps.listen();

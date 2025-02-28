@@ -77,9 +77,8 @@ JTEncode jtencode;
 // Global variables
 unsigned long freq;
 char message[] = "KE8TJE FM09";
-char call[] = "KE8TJE";
-char loc[] = "FM09";
-uint8_t dbm = 27;
+
+uint8_t dbm = 23;
 
 // 27 - 500 mW
 // 23 - 200 mW
