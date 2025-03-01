@@ -21,13 +21,15 @@ int loc_valid = 0;
 int ts = 0;
 float lon, lat, utc;
 
-char call[] = "KE8TJE";
-char loc[] = "xxxx";
+char call[] = "W8CUL";
+char loc_public[] = "xxxx";
 
 
 //#define FT8 1
 #define WSPR 1
 #define sim 0
+//#define disable_encode 1
+
 //#define debug_low 1 - //unconnent only when needed
 
 char grid[10];  //global variable
@@ -55,17 +57,15 @@ void loop() {
     //sim packet  $GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E
     if (gps_raw.substring(0, 6) == "$GPGLL") {
       //print GPS data with or without lock
-      Serial.println(gps_raw);
+      
 #ifdef debug_low
       if (sim == 1) {
-        gps_raw = "$GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E";
+        gps_raw = "$GPGLL,3964.61834,N,07997.41000,W,175359.00,A,A*7E";
         //v4.2 test data
-        //Serial.println(gps_raw);
-      } else {
-        //print raw GPS data
         //Serial.println(gps_raw);
       }
 #endif
+      Serial.println(gps_raw);
       gps_raw.toCharArray(test_data, 100);
       char *p = strtok(test_data, ",");
       update_GPS(p);
@@ -94,33 +94,15 @@ void update_GPS(char *p) {
   p = strtok(NULL, ",");  //lat - <1>
   //sprintf(Lat, "%s", p);
   lat = atof(p) / 100.00;
-
-  //Should be able to remove these after testing
-  // bug fix in v2
-  /*if (Lat[4] == '.') {
-    Lat[7] = '\0';
-  } else {
-    Lat[8] = '\0';
-  }
-  */
-
-
+  lat = int(lat) + (lat-int(lat))*100/60;
+  
 
   p = strtok(NULL, ",");  // lat_dir - <2>
   // handel south
 
   p = strtok(NULL, ",");  //lng - <3>
-  lon = atof(p);
-
-
-  //Should be able to remove these after testing
-  /*
-  if (Lon[4] == '.') {
-    Lon[7] = '\0';
-  } else {
-    Lon[8] = '\0';
-  }
-  */
+  lon = atof(p) / 100.00;
+  lon = int(lon) + (lon-int(lon))*100/60; //fix for minutes
 
   p = strtok(NULL, ",");  //dir - <4>
   if (p[0] == 'W') {
@@ -137,6 +119,7 @@ void update_GPS(char *p) {
   if (p[0] == 'A') {
     msg_valid = 1;
     togrid(lat, lon);
+    loc_valid = 1;
   } else {
     msg_valid = 0;
   }
@@ -148,6 +131,11 @@ void update_GPS(char *p) {
   Serial.print(min);
   Serial.print(",");
   Serial.println(sec);
+  Serial.print(lat);
+  Serial.print(",");
+  Serial.println(lon);
+
+  Serial.println(grid);
 
 #ifdef FT8
   if (sec == 30) {
@@ -177,8 +165,8 @@ void update_GPS(char *p) {
     gps.stopListening();
 
     //Function to handel ts and locations
-    for (int i = 0; i++; i < 4) {
-      loc[i] = grid[i + ts * 4];
+    for (int i = 0; i < 4;i++) {
+      loc_public[i] = grid[i + ts * 4];
     }
     if (ts == 0) {
       ts = 1;
@@ -186,11 +174,19 @@ void update_GPS(char *p) {
       ts = 0;
     }
     Serial.print("WSPR-20m :");
-    Serial.print(loc);
+    Serial.print(loc_public);
     Serial.println();
 
     // Send WSPR
-    encode();
+    #ifndef disable_encode 
+      set_tx_buffer(); //update the location
+      encode();
+    #endif
+
+    #ifdef disable_encode
+      delay(5000);
+      Serial.println("simulated encode");
+    #endif
 
     delay(50);  //delay to avoid extra triggers
     gps.listen();

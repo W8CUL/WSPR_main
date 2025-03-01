@@ -77,8 +77,8 @@ JTEncode jtencode;
 // Global variables
 unsigned long freq;
 char message[] = "KE8TJE FM09";
-
-uint8_t dbm = 23;
+char loc[]="xxxx";
+uint8_t dbm = 27;
 
 // 27 - 500 mW
 // 23 - 200 mW
@@ -91,7 +91,7 @@ uint16_t tone_delay, tone_spacing;
 // Loop through the string, transmitting one character at a time.
 void encode() {
   uint8_t i;
-
+  
   // Reset the tone to the base frequency and turn on the output
   si5351.output_enable(SI5351_CLK0, 1);
   digitalWrite(LED_PIN, HIGH);
@@ -105,6 +105,8 @@ void encode() {
   digitalWrite(LED_PIN, LOW);
 }
 
+
+
 void set_tx_buffer() {
   // Clear out the transmit buffer
   memset(tx_buffer, 0, 255);
@@ -115,7 +117,7 @@ void set_tx_buffer() {
 #endif
 
 #ifdef WSPR
-  jtencode.wspr_encode(call, loc, dbm, tx_buffer);
+  jtencode.wspr_encode(call, loc_public, dbm, tx_buffer);
 #endif
 }
 
