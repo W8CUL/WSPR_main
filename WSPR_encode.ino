@@ -107,7 +107,7 @@ void encode() {
 
 
 
-void set_tx_buffer() {
+void set_tx_buffer(uint8_t pwr) {
   // Clear out the transmit buffer
   memset(tx_buffer, 0, 255);
   //jtencode.wspr_encode(call, loc, dbm, tx_buffer);
@@ -117,7 +117,7 @@ void set_tx_buffer() {
 #endif
 
 #ifdef WSPR
-  jtencode.wspr_encode(call, loc_public, dbm, tx_buffer);
+  jtencode.wspr_encode(call, loc_public, pwr, tx_buffer);
 #endif
 }
 
@@ -159,5 +159,5 @@ void setup_WSPR() {
   // Set CLK0 output
   si5351.drive_strength(SI5351_CLK0, SI5351_DRIVE_8MA);  // Set for max power if desired
   si5351.output_enable(SI5351_CLK0, 0);                  // Disable the clock initially
-  set_tx_buffer();
+  //set_tx_buffer();
 }
