@@ -41,6 +41,7 @@
 #include <string.h>
 
 #include "Wire.h"
+#include<avr/wdt.h>
 
 // Mode defines
 #define WSPR_TONE_SPACING 146  // ~1.46 Hz
@@ -91,7 +92,7 @@ uint16_t tone_delay, tone_spacing;
 // Loop through the string, transmitting one character at a time.
 void encode() {
   uint8_t i;
-  
+
   // Reset the tone to the base frequency and turn on the output
   si5351.output_enable(SI5351_CLK0, 1);
   digitalWrite(LED_PIN, HIGH);
@@ -99,6 +100,7 @@ void encode() {
   for (i = 0; i < symbol_count; i++) {
     si5351.set_freq((freq * 100) + (tx_buffer[i] * tone_spacing), SI5351_CLK0);
     delay(tone_delay);
+    wdt_reset(); //WDT reset
   }
   // Turn off the output
   si5351.output_enable(SI5351_CLK0, 0);

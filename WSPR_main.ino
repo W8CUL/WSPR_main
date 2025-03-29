@@ -8,6 +8,10 @@
 
 #include "Wire.h"
 
+//add WDT
+#include<avr/wdt.h>
+
+
 SoftwareSerial gps(3, 2);  // RX, TX
 char test_data[100];
 
@@ -25,13 +29,14 @@ char loc_public[] = "xxxx";
 #define sim 0
 //#define disable_encode 1
 
-//#define debug_low 1 - //unconnent only when needed
+#define debug_low 1 - //unconnent only when needed
 
 char grid[10];  //global variable
 
 
 void setup() {
-  // put your setup code here, to run once:
+  wdt_disable();
+
   Serial.begin(9600);
   Serial.println(F("KE8TJE WSPR testing - 20 m"));
 
@@ -43,6 +48,7 @@ void setup() {
 
 
 void loop() {
+  wdt_enable(WDTO_2S);
   // put your main code here, to run repeatedly:
   while (gps.available() > 0) {
     String gps_raw = gps.readStringUntil('\n');
@@ -51,8 +57,8 @@ void loop() {
 #endif
     //sim packet  $GPGLL,3938.76279,N,07958.40013,W,175359.00,A,A*7E
     if (gps_raw.substring(0, 6) == "$GPGLL") {
-      //print GPS data with or without lock
-
+      wdt_reset(); //WDT reset
+      
 #ifdef debug_low
       if (sim == 1) {
         gps_raw = "$GPGLL,3964.61834,N,07997.41000,W,175359.00,A,A*7E";
@@ -63,6 +69,8 @@ void loop() {
       Serial.println(gps_raw);
       gps_raw.toCharArray(test_data, 100);
       char *p = strtok(test_data, ",");
+
+      wdt_enable(WDTO_8S);
       update_GPS_PD1616(p);
     }
   }
